@@ -46,10 +46,7 @@ AC_MSG_NOTICE([checking if clock_gettime is available])
 AC_SEARCH_LIBS([clock_gettime], [rt posix4])
 
 # SpiderMonkey.
-PKG_CHECK_MODULES(MOZJS, [mozjs-25], [mozjs_version=25; break;], 
-	[PKG_CHECK_MODULES(MOZJS, [mozjs-24],[mozjs_version=24; break;], [
-		])
-	])
+PKG_CHECK_MODULES(MOZJS, [js], [mozjs_version=45; break;])
 
 AC_SUBST(MOZJS_CFLAGS)
 AC_SUBST(MOZJS_LIBS)
@@ -60,7 +57,7 @@ AC_MSG_NOTICE([SpiderMonkey version: $mozjs_version])
 
 # Check which version of SpiderMonkey is available.
 AM_CONDITIONAL(HAVE_MOZJS_24, [test "x$mozjs_version" = "x24"])
-AM_CONDITIONAL(HAVE_MOZJS_25, [test "x$mozjs_version" = "x25"])
+AM_CONDITIONAL(HAVE_MOZJS_45, [test "x$mozjs_version" = "x45"])
 
 AS_IF([test "x$mozjs_version" != "x"],
 	[AC_DEFINE_UNQUOTED([MOZJS_VERSION], [$mozjs_version], [SpiderMonkey version.])])
