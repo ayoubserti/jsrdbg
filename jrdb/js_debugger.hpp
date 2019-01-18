@@ -28,7 +28,7 @@
 #include <log.hpp>
 
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 
 class JSDebugger : public DebuggerEngine {
 public:

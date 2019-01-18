@@ -22,7 +22,7 @@
 
 #include <jsdbg_common.h>
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 #include <map>
 
 #include <threads.hpp>

@@ -21,7 +21,7 @@
 #define PUBLIC_JSRDBG_H_
 
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 
 #include "jsdbg_common.h"
 

@@ -19,6 +19,7 @@
 
 #include "js_utils.hpp"
 
+#include <js/Conversions.h>
 #include <string>
 #include <map>
 
@@ -57,7 +58,8 @@ MozJSUtils::~MozJSUtils() {
 bool MozJSUtils::toString( JS::HandleString str, std::string &dest ) {
 
     JSAutoRequest req( _context );
-
+    
+    
     jstring jstr;
     if( !toString( str, jstr ) ) {
         return false;
@@ -75,23 +77,25 @@ bool MozJSUtils::toString( JS::HandleString str, std::string &dest ) {
 
 }
 
-bool MozJSUtils::toString( JS::HandleString str, jstring &dest ) {
+/*bool MozJSUtils::toString( JS::HandleString str, jstring &dest ) {
 
     JSAutoRequest req( _context );
 
-    const jschar *chars = JS_GetStringCharsZ( _context, str );
+   // const char16_t *chars = JS_GetStringCharsZ( _context, str );
+    JSString*  chars = str.address();
     if( !chars ) {
         return false;
     }
-
-    dest = chars;
+    
+    
+    dest = JS_GetTwoByteExternalStringChars(chars);
 
     return true;
-}
+}*/
 
 bool MozJSUtils::toUTF8( JS::Value str, std::string &dest ) {
 
-    RootedString jsStr( _context, JSVAL_TO_STRING( str ) );
+    RootedString jsStr( _context, JS::ToString( str ).address() );
 
     return toUTF8( jsStr, dest );
 
@@ -259,7 +263,7 @@ bool MozJSUtils::argsToString(CallArgs &args, jstring &out) {
     return result;
 }
 
-bool MozJSUtils::evaluateUtf8Script( JSObject *global, const std::string &script, const char *fileName, jsval *outRetval ) {
+bool MozJSUtils::evaluateUtf8Script( JSObject *global, const std::string &script, const char *fileName, JS::Value *outRetval ) {
 
     jstring jscript;
     try {
@@ -301,7 +305,7 @@ bool MozJSUtils::parseUtf8JSON(const std::string &str, JS::MutableHandleObject d
     return true;
 }
 
-bool MozJSUtils::evaluateScript( JSObject *global, const jstring &script, const char *fileName, jsval *outRetval ) {
+bool MozJSUtils::evaluateScript( JSObject *global, const jstring &script, const char *fileName, JS::Value *outRetval ) {
 
     JSAutoRequest ar(_context);
     JSAutoCompartment cm(_context, global);
@@ -321,7 +325,7 @@ bool MozJSUtils::evaluateScript( JSObject *global, const jstring &script, const 
 
     JS::RootedObject rootedObj(_context, global);
 
-    jsval retval = JSVAL_VOID;
+    JS::MutableHandleValue retval;
     if (!JS::Evaluate(_context, rootedObj, options, script.c_str(), script.size(), &retval)) {
         _lastError = ERROR_EVALUATION_FAILED;
         return false;
@@ -336,7 +340,7 @@ bool MozJSUtils::evaluateScript( JSObject *global, const jstring &script, const 
     }
 
     if(outRetval) {
-        *outRetval = retval;
+        *outRetval = retval.get();
     }
 
     _lastError = 0;
@@ -355,20 +359,20 @@ JSCompartment* MozJSUtils::getCurrentCompartment(JSObject *global) {
 namespace Utils {
 
     // Copies all 16-bit UNICODE characters into the provided buffer.
-    JSBool JSONCommandWriteCallback(const jschar *buf, uint32_t len, void *data) {
+    bool JSONCommandWriteCallback(const char16_t *buf, uint32_t len, void *data) {
         if( !data ) {
-            return JS_FALSE;
+            return false;
         }
-        std::basic_string<jschar> *buffer = reinterpret_cast< std::basic_string<jschar>* >( data );
+        std::basic_string<char16_t> *buffer = reinterpret_cast< std::basic_string<char16_t>* >( data );
         buffer->append( buf, len );
-        return JS_TRUE;
+        return true;
     }
 
 }
 
 bool MozJSUtils::stringifyToUtf8( JS::Value value, std::string &result ) {
 
-    std::basic_string<jschar> stringifiedValue;
+    std::basic_string<char16_t> stringifiedValue;
     if( !JS_Stringify( _context, &value, nullptr, JS::NullHandleValue, &JSONCommandWriteCallback, &stringifiedValue ) ) {
         _lastError = ERROR_JS_STRINGIFY_FAILED;
         return false;
@@ -521,11 +525,11 @@ struct ResourceManagersHolder {
 /**
  * Prints function arguments into the console.
  */
-static JSBool JSR_fn_utils_require( JSContext *context, unsigned int argc, Value *vp ) {
+static bool JSR_fn_utils_require( JSContext *context, unsigned int argc, Value *vp ) {
 
    if( argc == 0 ) {
        JS_ReportError( context, "JSR_fn_utils_require:: Bad args." );
-       return JS_FALSE;
+       return false;
    }
 
    CallArgs args = CallArgsFromVp(argc, vp);
@@ -559,7 +563,7 @@ static JSBool JSR_fn_utils_require( JSContext *context, unsigned int argc, Value
 
    if( !global ) {
        JS_ReportError( context, "JSR_fn_utils_require:: Global not found." );
-       return JS_FALSE;
+       return false;
    }
 
    MozJSUtils jsUtils(context);
@@ -568,7 +572,7 @@ static JSBool JSR_fn_utils_require( JSContext *context, unsigned int argc, Value
    std::string modulePrefix;
    if(!jsUtils.argsToString(args, moduleName)) {
        JS_ReportError( context, "JSR_fn_utils_require:: Cannot convert arguments to C string." );
-       return JS_FALSE;
+       return false;
    }
 
    size_t pos = moduleName.find_last_of( '/' );
@@ -580,7 +584,7 @@ static JSBool JSR_fn_utils_require( JSContext *context, unsigned int argc, Value
    Value valRMHolder;
    if( !JS_GetProperty( context, global, RES_MANAGER_HOLDER, &valRMHolder ) || !valRMHolder.isObject() ) {
        JS_ReportError( context, "JSR_fn_utils_require:: ResourceManager holder not found in the global object." );
-       return JS_FALSE;
+       return false;
    }
 
    ResourceManagersHolder *holder = reinterpret_cast<ResourceManagersHolder*>( JS_GetPrivate( &valRMHolder.toObject() ) );
@@ -598,19 +602,19 @@ static JSBool JSR_fn_utils_require( JSContext *context, unsigned int argc, Value
            Value module;
            if( !jsUtils.evaluateUtf8Script( global, moduleScript, moduleName.c_str(), &module ) ) {
                JS_ReportError( context, "JSR_fn_utils_require:: Cannot evaluate module." );
-               return JS_FALSE;
+               return false;
            }
 
            args.rval().set(module);
 
        }
 
-       return JS_TRUE;
+       return true;
    }
 
    args.rval().setNull();
 
-   return JS_TRUE;
+   return true;
 }
 
 void JSManagers_FinalizeOp( JSFreeOp *fop, JSObject *obj ) {
@@ -689,7 +693,7 @@ bool MozJSUtils::registerModuleLoader( JSObject *global ) {
 
     JS_SetPrivate( holder, holders );
 
-    JSBool result;
+    bool result;
     if( !JS_SetPropertyAttributes( _context, global, RES_MANAGER_HOLDER, JSPROP_PERMANENT | JSPROP_READONLY, &result ) ) {
         LoggerFactory::getLogger().error( "JSDebuggerEngine::registerModuleLoader: Cannot change property attributes." );
         return false;

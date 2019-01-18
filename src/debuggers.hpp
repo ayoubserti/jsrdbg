@@ -24,7 +24,7 @@
 #include <jsrdbg.h>
 
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 
 #include <threads.hpp>
 #include <log.hpp>

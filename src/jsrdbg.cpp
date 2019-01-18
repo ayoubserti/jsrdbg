@@ -19,7 +19,7 @@
 
 /* MozJS */
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 
 #include <iostream>
 #include <string.h>

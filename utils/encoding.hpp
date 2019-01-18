@@ -21,7 +21,7 @@
 #define SRC_ENCODING_HPP_
 
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 
 #include <string>
 #include <sstream>
@@ -48,8 +48,8 @@ private:
     std::string _msg;
 };
 
-typedef std::basic_string<jschar> jstring;
-typedef std::basic_stringstream<jschar> jstringstream;
+typedef std::basic_string<char16_t> jstring;
+typedef std::basic_stringstream<char16_t> jstringstream;
 
 /**
  * Converts MBS characters into the wide characters. MBS characters are
@@ -253,7 +253,7 @@ private:
     std::string _wideCharSet;
 };
 
-typedef WideCharEncoder<jschar> JCharEncoder;
+typedef WideCharEncoder<char16_t> JCharEncoder;
 
 }
 

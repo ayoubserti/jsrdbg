@@ -22,7 +22,7 @@
 
 #include <string>
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 
 #include "encoding.hpp"
 #include "res_manager.hpp"
@@ -53,7 +53,7 @@ public:
 public:
     // Character converting.
     bool toString( JS::HandleString str, std::string &dest );
-    bool toString( JS::HandleString str, jstring &dest );
+    //bool toString( JS::HandleString str, jstring &dest );
     bool toUTF8( JS::HandleString str, std::string &dest );
     bool toUTF8( JS::Value str, std::string &dest );
     bool fromString( const std::string &str, JS::MutableHandleString dest );
@@ -63,8 +63,8 @@ public:
     bool argsToString(JS::CallArgs &args, std::string &out);
     bool argsToString(JS::CallArgs &args, jstring &out);
     // Scripts evaluation.
-    bool evaluateUtf8Script( JSObject *global, const std::string &script, const char *fileName, jsval *outRetval );
-    bool evaluateScript( JSObject *global, const jstring &script, const char *fileName, jsval *outRetval );
+    bool evaluateUtf8Script( JSObject *global, const std::string &script, const char *fileName, JS::Value *outRetval );
+    bool evaluateScript( JSObject *global, const jstring &script, const char *fileName, JS::Value *outRetval );
     // JSON support.
     bool parseUtf8JSON(const std::string &str, JS::MutableHandleObject dest);
     // Compartments.

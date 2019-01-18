@@ -24,7 +24,7 @@
 
 // SpiderMonkey.
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 
 // JSLDBG.
 #include <jsldbg.h>

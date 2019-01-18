@@ -23,7 +23,7 @@
 
 #include <jsdbg_common.h>
 #include <jsapi.h>
-#include <jsdbgapi.h>
+//#include <jsdbgapi.h>
 #include <js_utils.hpp>
 #include <encoding.hpp>
 
